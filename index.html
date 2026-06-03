@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presupuesto de Ingeniería</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f5a623">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Presupuesto">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2336;
+    --border: #2a3050;
+    --accent: #f5a623;
+    --accent2: #3ecfcf;
+    --text: #e8eaf0;
+    --muted: #7880a0;
+    --danger: #ff5f5f;
+    --success: #4cd97b;
+    --section1: #f5a62322;
+    --section2: #3ecfcf18;
+    --section3: #a78bfa18;
+    --section4: #f472b618;
+    --section5: #34d39918;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #0f1117 0%, #1a1f35 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 28px 40px 20px;
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px;
+  }
+  .header-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 3px; color: var(--accent); line-height: 1; }
+  .header-sub { color: var(--muted); font-size: 12px; letter-spacing: 1px; margin-top: 4px; text-transform: uppercase; }
+  .total-badge {
+    background: var(--accent); color: #0f1117;
+    font-family: 'Bebas Neue'; font-size: 1.8rem; letter-spacing: 2px;
+    padding: 8px 22px; border-radius: 6px;
+    display: flex; flex-direction: column; align-items: center;
+    min-width: 180px;
+  }
+  .total-badge span { font-family: 'DM Sans'; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; opacity: .7; }
+
+  /* Layout */
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 60px; display: flex; flex-direction: column; gap: 28px; }
+
+  /* Section card */
+  .section-card {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  }
+  .section-header {
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none;
+    border-bottom: 1px solid var(--border);
+    transition: background .2s;
+  }
+  .section-header:hover { background: var(--surface2); }
+  .section-num {
+    font-family: 'Bebas Neue'; font-size: 1rem; letter-spacing: 2px;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #0f1117; font-weight: 700; flex-shrink: 0;
+  }
+  .section-title { font-weight: 600; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; margin-left: 12px; flex: 1; }
+  .section-total { font-family: 'DM Mono'; font-size: 15px; font-weight: 500; color: var(--accent); }
+  .toggle-icon { color: var(--muted); font-size: 18px; margin-left: 16px; transition: transform .3s; }
+  .section-body { padding: 0; }
+  .collapsed .section-body { display: none; }
+  .collapsed .toggle-icon { transform: rotate(-90deg); }
+
+  /* Colors per section */
+  .s1 .section-header { background: var(--section1); }
+  .s1 .section-num { background: var(--accent); }
+  .s2 .section-header { background: var(--section2); }
+  .s2 .section-num { background: var(--accent2); }
+  .s3 .section-header { background: var(--section3); }
+  .s3 .section-num { background: #a78bfa; }
+  .s4 .section-header { background: var(--section4); }
+  .s4 .section-num { background: #f472b6; }
+  .s5 .section-header { background: var(--section5); }
+  .s5 .section-num { background: #34d399; }
+
+  /* Table */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+    padding: 10px 14px; font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap; text-align: right;
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 10px 14px; vertical-align: middle; }
+
+  input[type="number"], input[type="text"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'DM Mono'; font-size: 13px;
+    padding: 5px 8px;
+    width: 90px; text-align: right;
+    transition: border-color .2s;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #1a1c2a;
+  }
+  input.wide { width: 160px; text-align: left; }
+
+  .row-label { font-weight: 500; white-space: nowrap; }
+  .row-calc { font-family: 'DM Mono'; font-size: 13px; text-align: right; color: var(--accent2); white-space: nowrap; }
+  .row-subtotal { font-family: 'DM Mono'; font-size: 14px; text-align: right; color: var(--success); font-weight: 600; white-space: nowrap; }
+
+  /* Total row */
+  .total-row td {
+    background: var(--surface2);
+    font-weight: 700; font-size: 13px;
+    padding: 12px 14px;
+    border-top: 2px solid var(--border);
+  }
+  .total-row .total-label { text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .total-row .total-val { font-family: 'DM Mono'; font-size: 15px; color: var(--accent); text-align: right; }
+
+  /* Summary bar */
+  .summary-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 28px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+  }
+  .sum-item { display: flex; flex-direction: column; gap: 4px; }
+  .sum-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+  .sum-val { font-family: 'DM Mono'; font-size: 16px; font-weight: 600; }
+  .sum-val.s1c { color: var(--accent); }
+  .sum-val.s2c { color: var(--accent2); }
+  .sum-val.s3c { color: #a78bfa; }
+  .sum-val.s4c { color: #f472b6; }
+  .sum-val.s5c { color: #34d399; }
+  .sum-val.total { color: var(--accent); font-size: 20px; }
+
+  /* Contratista rows */
+  .contractor-row td:first-child input { width: 200px; }
+
+  /* Install banner */
+  #install-banner {
+    display: none;
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--surface2); border: 1px solid var(--accent);
+    border-radius: 14px; padding: 14px 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    z-index: 999; width: calc(100% - 40px); max-width: 440px;
+    animation: slideUp .35s cubic-bezier(.16,1,.3,1);
+  }
+  #install-banner.show { display: flex; align-items: center; gap: 14px; }
+  @keyframes slideUp { from { transform: translateX(-50%) translateY(80px); opacity:0; } to { transform: translateX(-50%) translateY(0); opacity:1; } }
+  .install-icon { font-size: 2rem; flex-shrink: 0; }
+  .install-text { flex: 1; }
+  .install-text strong { display: block; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .install-text span { font-size: 11px; color: var(--muted); }
+  .btn-install {
+    background: var(--accent); color: #0f1117;
+    border: none; border-radius: 8px;
+    font-family: 'DM Sans'; font-weight: 700; font-size: 13px;
+    padding: 9px 18px; cursor: pointer; white-space: nowrap;
+    transition: opacity .2s;
+  }
+  .btn-install:hover { opacity: .85; }
+  .btn-dismiss {
+    background: none; border: none; color: var(--muted);
+    font-size: 20px; cursor: pointer; padding: 4px; line-height: 1;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 700px) {
+    .header { flex-direction: column; align-items: flex-start; padding: 20px; }
+    .total-badge { width: 100%; }
+    .container { padding: 16px 12px 40px; }
+    input[type="number"] { width: 70px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Banner de instalación PWA -->
+<div id="install-banner">
+  <div class="install-icon">📲</div>
+  <div class="install-text">
+    <strong>Instalar en pantalla de inicio</strong>
+    <span>Úsala sin internet, como una app nativa</span>
+  </div>
+  <button class="btn-install" id="btn-install">Instalar</button>
+  <button class="btn-dismiss" id="btn-dismiss" title="Cerrar">✕</button>
+</div>
+
+<div class="header">
+  <div>
+    <div class="header-title">Presupuesto de Ingeniería</div>
+    <div class="header-sub">Cálculo rápido · Mano de obra & servicios</div>
+  </div>
+  <div class="total-badge">
+    <span>Total</span>
+    <span id="grand-total">$0.00</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- RESUMEN -->
+  <div class="summary-bar">
+    <div class="sum-item"><div class="sum-label">Gastos Generales</div><div class="sum-val s1c" id="sum1">$0.00</div></div>
+    <div class="sum-item"><div class="sum-label">M.O. FARO</div><div class="sum-val s2c" id="sum2">$0.00</div></div>
+    <div class="sum-item"><div class="sum-label">M.O. Temporales</div><div class="sum-val s3c" id="sum3">$0.00</div></div>
+    <div class="sum-item"><div class="sum-label">Contratistas</div><div class="sum-val s4c" id="sum4">$0.00</div></div>
+    <div class="sum-item"><div class="sum-label">Campamento</div><div class="sum-val s5c" id="sum5">$0.00</div></div>
+    <div class="sum-item"><div class="sum-label">TOTAL GENERAL</div><div class="sum-val total" id="sum-total">$0.00</div></div>
+  </div>
+
+  <!-- 1. GASTOS GENERALES -->
+  <div class="section-card s1" id="sec1">
+    <div class="section-header" onclick="toggleSection('sec1')">
+      <div class="section-num">1</div>
+      <div class="section-title">Gastos Generales</div>
+      <div class="section-total" id="total1">$0.00</div>
+      <div class="toggle-icon">▾</div>
+    </div>
+    <div class="section-body">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:left">Detalle</th>
+            <th>Cantidad</th>
+            <th>Unidad/Días</th>
+            <th>Precio Unit. ($)</th>
+            <th>Total ($)</th>
+          </tr></thead>
+          <tbody id="tbody1">
+            <!-- rows injected by JS -->
+          </tbody>
+          <tfoot><tr class="total-row">
+            <td colspan="4" class="total-label">Total Gastos Generales</td>
+            <td class="total-val" id="foot1">$0.00</td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MANO DE OBRA FARO -->
+  <div class="section-card s2" id="sec2">
+    <div class="section-header" onclick="toggleSection('sec2')">
+      <div class="section-num">2</div>
+      <div class="section-title">Mano de Obra FARO</div>
+      <div class="section-total" id="total2">$0.00</div>
+      <div class="toggle-icon">▾</div>
+    </div>
+    <div class="section-body">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:left">Tipo de Trabajo</th>
+            <th>H. Norm.</th>
+            <th>Pers. Norm.</th>
+            <th>Val. H. Norm. ($)</th>
+            <th>H. Extra</th>
+            <th>Pers. Extra</th>
+            <th>Val. H. Extra ($)</th>
+            <th>Total H. Norm.</th>
+            <th>Total H. Extra</th>
+            <th>Subtotal ($)</th>
+          </tr></thead>
+          <tbody id="tbody2"></tbody>
+          <tfoot><tr class="total-row">
+            <td colspan="9" class="total-label">Total Mano de Obra FARO</td>
+            <td class="total-val" id="foot2">$0.00</td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MANO DE OBRA TEMPORALES -->
+  <div class="section-card s3" id="sec3">
+    <div class="section-header" onclick="toggleSection('sec3')">
+      <div class="section-num">3</div>
+      <div class="section-title">Mano de Obra Temporales</div>
+      <div class="section-total" id="total3">$0.00</div>
+      <div class="toggle-icon">▾</div>
+    </div>
+    <div class="section-body">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:left">Tipo</th>
+            <th>Días</th>
+            <th>Personas</th>
+            <th>Val. Diario ($)</th>
+            <th>Total Diario</th>
+            <th>H. Extra</th>
+            <th>Val. H. Extra ($)</th>
+            <th>Total H. Extra</th>
+            <th>Subtotal ($)</th>
+          </tr></thead>
+          <tbody id="tbody3"></tbody>
+          <tfoot><tr class="total-row">
+            <td colspan="8" class="total-label">Total Mano de Obra Temporales</td>
+            <td class="total-val" id="foot3">$0.00</td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. CONTRATISTAS -->
+  <div class="section-card s4" id="sec4">
+    <div class="section-header" onclick="toggleSection('sec4')">
+      <div class="section-num">4</div>
+      <div class="section-title">Contratistas</div>
+      <div class="section-total" id="total4">$0.00</div>
+      <div class="toggle-icon">▾</div>
+    </div>
+    <div class="section-body">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:left">Contratista</th>
+            <th style="text-align:left">Comentario</th>
+            <th>Total ($)</th>
+          </tr></thead>
+          <tbody id="tbody4"></tbody>
+          <tfoot><tr class="total-row">
+            <td colspan="2" class="total-label">Total Contratistas</td>
+            <td class="total-val" id="foot4">$0.00</td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. CAMPAMENTO Y LOGÍSTICA -->
+  <div class="section-card s5" id="sec5">
+    <div class="section-header" onclick="toggleSection('sec5')">
+      <div class="section-num">5</div>
+      <div class="section-title">Campamento y Logística</div>
+      <div class="section-total" id="total5">$0.00</div>
+      <div class="toggle-icon">▾</div>
+    </div>
+    <div class="section-body">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:left">Ítem</th>
+            <th>Tiempo (días)</th>
+            <th>Cantidad/Fardos</th>
+            <th>Valor Unit. ($)</th>
+            <th>Total ($)</th>
+          </tr></thead>
+          <tbody id="tbody5"></tbody>
+          <tfoot><tr class="total-row">
+            <td colspan="4" class="total-label">Total Campamento</td>
+            <td class="total-val" id="foot5">$0.00</td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const data = {
+  gastos: [
+    { label: 'Viático',        cantidad: 0, dias: 0,   precio: 5   },
+    { label: 'Combustible',    cantidad: 0,dias: 0,   precio: 5   },
+    { label: 'Documentación',  cantidad: 0, dias: 0,   precio: 15  },
+    { label: 'Hospedaje',      cantidad: 0, dias: 0,   precio: 5   },
+    { label: 'Imprevistos',    cantidad: 0, dias: 0,   precio: 200 },
+  ],
+  faro: [
+    { label: 'Obra de banco, canalizado conduit o cableado', hNorm:0,pNorm:0,vNorm:18, hExtra:0,pExtra:0,vExtra:27 },
+    { label: 'Canalizado Inoxidable',                       hNorm:0, pNorm:0,vNorm:24, hExtra:0,pExtra:0,vExtra:35 },
+    { label: 'Programación',                                hNorm:0,pNorm:0,vNorm:50, hExtra:0,pExtra:0,vExtra:60 },
+    { label: 'Costo tiempo de traslado',                    hNorm:0, pNorm:0,vNorm:18, hExtra:0,pExtra:0,vExtra:27 },
+    { label: 'Supervisión',                                 hNorm:0, pNorm:0,vNorm:40, hExtra:0,pExtra:0,vExtra:50 },
+  ],
+  temporales: [
+    { label: 'Mecánico',  dias:0, personas:0, vDia:40,  hExtra:0, vExtra:6.875 },
+    { label: 'Eléctrico', dias:0, personas:0, vDia:40,  hExtra:0, vExtra:6.875 },
+  ],
+  contratistas: [
+    { label: 'Contratista 1', comentario: '', total: 0 },
+    { label: 'Contratista 2', comentario: '', total: 0 },
+    { label: 'Contratista 3', comentario: '', total: 0 },
+  ],
+  campamento: [
+    { label: 'Planta eléctrica',                  tiempo:0, cantidad:0, vUnit:15   },
+    { label: 'Sanitario portátil',                 tiempo:0, cantidad:0, vUnit:5    },
+    { label: 'Construcción bodega provisional',    tiempo:0, cantidad:0, vUnit:650  },
+    { label: 'Agua (fardos)',                      tiempo:0, cantidad:0, vUnit:2.25 },
+  ]
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const fmt = v => '$' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+function inp(val, onChange, small) {
+  const el = document.createElement('input');
+  el.type = 'number'; el.min = 0; el.step = 'any';
+  el.value = val;
+  if (!small) el.style.width = '82px';
+  el.addEventListener('input', onChange);
+  return el;
+}
+function td(content, cls) {
+  const el = document.createElement('td');
+  if (typeof content === 'string') el.textContent = content;
+  else if (content) el.appendChild(content);
+  if (cls) el.className = cls;
+  return el;
+}
+function calcTd() {
+  const el = document.createElement('td');
+  el.className = 'row-calc'; el.textContent = '$0.00';
+  return el;
+}
+function subTd() {
+  const el = document.createElement('td');
+  el.className = 'row-subtotal'; el.textContent = '$0.00';
+  return el;
+}
+
+// ── SECTION 1 ─────────────────────────────────────────────────────────────────
+function buildGastos() {
+  const tbody = document.getElementById('tbody1');
+  data.gastos.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    const tTotal = calcTd();
+
+    const recalc = () => {
+      const q = parseFloat(inpQ.value)||0;
+      const d = parseFloat(inpD.value)||0;
+      const p = parseFloat(inpP.value)||0;
+      const t = d > 0 ? q * d * p : q * p;
+      row.cantidad = q; row.dias = d; row.precio = p;
+      tTotal.textContent = fmt(t);
+      recalcSection1();
+    };
+
+    const inpQ = inp(row.cantidad, recalc);
+    const inpD = inp(row.dias, recalc);
+    const inpP = inp(row.precio, recalc);
+
+    tr.append(
+      td(row.label, 'row-label'),
+      td(inpQ), td(inpD), td(inpP),
+      tTotal
+    );
+    tbody.appendChild(tr);
+    recalc();
+  });
+}
+
+function recalcSection1() {
+  let t = 0;
+  document.querySelectorAll('#tbody1 .row-calc').forEach(td => {
+    t += parseFloat(td.textContent.replace(/[$,]/g,''))||0;
+  });
+  document.getElementById('total1').textContent = fmt(t);
+  document.getElementById('foot1').textContent = fmt(t);
+  document.getElementById('sum1').textContent = fmt(t);
+  recalcGrand();
+}
+
+// ── SECTION 2 ─────────────────────────────────────────────────────────────────
+function buildFaro() {
+  const tbody = document.getElementById('tbody2');
+  data.faro.forEach((row) => {
+    const tr = document.createElement('tr');
+    const tNorm = calcTd(), tExtra = calcTd(), tSub = subTd();
+
+    const recalc = () => {
+      const hn = parseFloat(iHN.value)||0, pn = parseFloat(iPN.value)||0, vn = parseFloat(iVN.value)||0;
+      const he = parseFloat(iHE.value)||0, pe = parseFloat(iPE.value)||0, ve = parseFloat(iVE.value)||0;
+      const norm = hn * pn * vn, extra = he * pe * ve;
+      tNorm.textContent = fmt(norm);
+      tExtra.textContent = fmt(extra);
+      tSub.textContent = fmt(norm + extra);
+      recalcSection2();
+    };
+
+    const iHN = inp(row.hNorm,  recalc), iPN = inp(row.pNorm, recalc), iVN = inp(row.vNorm, recalc);
+    const iHE = inp(row.hExtra, recalc), iPE = inp(row.pExtra,recalc), iVE = inp(row.vExtra,recalc);
+
+    tr.append(
+      td(row.label, 'row-label'),
+      td(iHN), td(iPN), td(iVN),
+      td(iHE), td(iPE), td(iVE),
+      tNorm, tExtra, tSub
+    );
+    tbody.appendChild(tr);
+    recalc();
+  });
+}
+
+function recalcSection2() {
+  let t = 0;
+  document.querySelectorAll('#tbody2 .row-subtotal').forEach(td => {
+    t += parseFloat(td.textContent.replace(/[$,]/g,''))||0;
+  });
+  document.getElementById('total2').textContent = fmt(t);
+  document.getElementById('foot2').textContent = fmt(t);
+  document.getElementById('sum2').textContent = fmt(t);
+  recalcGrand();
+}
+
+// ── SECTION 3 ─────────────────────────────────────────────────────────────────
+function buildTemporales() {
+  const tbody = document.getElementById('tbody3');
+  data.temporales.forEach(row => {
+    const tr = document.createElement('tr');
+    const tDia = calcTd(), tHExtra = calcTd(), tSub = subTd();
+
+    const recalc = () => {
+      const d = parseFloat(iD.value)||0, p = parseFloat(iP.value)||0, vd = parseFloat(iVD.value)||0;
+      const he = parseFloat(iHE.value)||0, ve = parseFloat(iVE.value)||0;
+      const dia = d * p * vd, extra = he * ve;
+      tDia.textContent = fmt(dia);
+      tHExtra.textContent = fmt(extra);
+      tSub.textContent = fmt(dia + extra);
+      recalcSection3();
+    };
+
+    const iD = inp(row.dias, recalc), iP = inp(row.personas, recalc), iVD = inp(row.vDia, recalc);
+    const iHE = inp(row.hExtra, recalc), iVE = inp(row.vExtra, recalc);
+
+    tr.append(
+      td(row.label, 'row-label'),
+      td(iD), td(iP), td(iVD),
+      tDia,
+      td(iHE), td(iVE),
+      tHExtra, tSub
+    );
+    tbody.appendChild(tr);
+    recalc();
+  });
+}
+
+function recalcSection3() {
+  let t = 0;
+  document.querySelectorAll('#tbody3 .row-subtotal').forEach(td => {
+    t += parseFloat(td.textContent.replace(/[$,]/g,''))||0;
+  });
+  document.getElementById('total3').textContent = fmt(t);
+  document.getElementById('foot3').textContent = fmt(t);
+  document.getElementById('sum3').textContent = fmt(t);
+  recalcGrand();
+}
+
+// ── SECTION 4 ─────────────────────────────────────────────────────────────────
+function buildContratistas() {
+  const tbody = document.getElementById('tbody4');
+  data.contratistas.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.className = 'contractor-row';
+    const tSub = subTd();
+
+    const recalc = () => {
+      const v = parseFloat(iTotal.value)||0;
+      tSub.textContent = fmt(v);
+      recalcSection4();
+    };
+
+    const iComment = document.createElement('input');
+    iComment.type = 'text'; iComment.className = 'wide';
+    iComment.value = row.comentario; iComment.placeholder = 'Descripción...';
+
+    const iTotal = inp(row.total, recalc);
+
+    tr.append(
+      td(row.label, 'row-label'),
+      td(iComment),
+      tSub
+    );
+    // replace subtotal with input + calc pair
+    tr.children[2].innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.style.display = 'flex'; wrap.style.gap = '8px'; wrap.style.alignItems = 'center'; wrap.style.justifyContent = 'flex-end';
+    wrap.appendChild(iTotal);
+    tr.children[2].appendChild(wrap);
+    // actually we want separate cols: input then calc
+    tr.children[2].replaceWith(td(iTotal));
+    tbody.appendChild(tr);
+    recalc();
+  });
+}
+
+function recalcSection4() {
+  let t = 0;
+  document.querySelectorAll('#tbody4 input[type="number"]').forEach(inp => {
+    t += parseFloat(inp.value)||0;
+  });
+  document.getElementById('total4').textContent = fmt(t);
+  document.getElementById('foot4').textContent = fmt(t);
+  document.getElementById('sum4').textContent = fmt(t);
+  recalcGrand();
+}
+
+// ── SECTION 5 ─────────────────────────────────────────────────────────────────
+function buildCampamento() {
+  const tbody = document.getElementById('tbody5');
+  data.campamento.forEach(row => {
+    const tr = document.createElement('tr');
+    const tTotal = calcTd();
+
+    const recalc = () => {
+      const ti = parseFloat(iTi.value)||0, ca = parseFloat(iCa.value)||0, vu = parseFloat(iVU.value)||0;
+      const t = (ca > 0) ? ti * ca * vu : ti * vu;
+      tTotal.textContent = fmt(t);
+      recalcSection5();
+    };
+
+    const iTi = inp(row.tiempo, recalc), iCa = inp(row.cantidad, recalc), iVU = inp(row.vUnit, recalc);
+
+    tr.append(
+      td(row.label, 'row-label'),
+      td(iTi), td(iCa), td(iVU),
+      tTotal
+    );
+    tbody.appendChild(tr);
+    recalc();
+  });
+}
+
+function recalcSection5() {
+  let t = 0;
+  document.querySelectorAll('#tbody5 .row-calc').forEach(td => {
+    t += parseFloat(td.textContent.replace(/[$,]/g,''))||0;
+  });
+  document.getElementById('total5').textContent = fmt(t);
+  document.getElementById('foot5').textContent = fmt(t);
+  document.getElementById('sum5').textContent = fmt(t);
+  recalcGrand();
+}
+
+// ── GRAND TOTAL ───────────────────────────────────────────────────────────────
+function recalcGrand() {
+  let g = 0;
+  [1,2,3,4,5].forEach(i => {
+    const el = document.getElementById('sum'+i);
+    g += parseFloat(el.textContent.replace(/[$,]/g,''))||0;
+  });
+  document.getElementById('grand-total').textContent = fmt(g);
+  document.getElementById('sum-total').textContent = fmt(g);
+}
+
+// ── TOGGLE ────────────────────────────────────────────────────────────────────
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+buildGastos();
+buildFaro();
+buildTemporales();
+buildContratistas();
+buildCampamento();
+// ── PWA: SERVICE WORKER ───────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.warn('SW error:', err));
+  });
+}
+
+// ── PWA: INSTALL BANNER ───────────────────────────────────────────────────────
+let deferredPrompt = null;
+const banner  = document.getElementById('install-banner');
+const btnInst = document.getElementById('btn-install');
+const btnDism = document.getElementById('btn-dismiss');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Mostrar banner solo si el usuario no lo descartó antes
+  if (!localStorage.getItem('pwa-dismissed')) {
+    setTimeout(() => banner.classList.add('show'), 1500);
+  }
+});
+
+btnInst.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  banner.classList.remove('show');
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    console.log('PWA instalada ✔');
+  }
+  deferredPrompt = null;
+});
+
+btnDism.addEventListener('click', () => {
+  banner.classList.remove('show');
+  localStorage.setItem('pwa-dismissed', '1');
+});
+
+// Si ya está instalada como PWA, no mostrar banner
+window.addEventListener('appinstalled', () => {
+  banner.classList.remove('show');
+  deferredPrompt = null;
+});
+</script>
+</body>
+</html>
